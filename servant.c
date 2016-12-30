@@ -1,8 +1,10 @@
 /*
- * 単純なTCP Server （現在時刻送信）
- * 	./server
+ * Blackjack
+ * 	
+ * 	gcc -o servant servant.c
  *
-  	gcc -o server server_time.c
+ *	<Server>  $servant s
+ *	<Client>  $servant c
  */
 
 
@@ -34,7 +36,8 @@ int eq(int x, int y)
 	return x == y;
 }
 
-void server(int argc, char *argv[]){
+void server(int argc, char *argv[])
+{
 	int sock, socke;	//ソケット
 	struct addrinfo hints, *res;	//getaddrinfo用
 	FILE *fp;
@@ -50,12 +53,14 @@ void server(int argc, char *argv[]){
 	hints.ai_family = AF_INET;	//IPv4
 	hints.ai_socktype = SOCK_STREAM; //TCP
 	hints.ai_flags = AI_PASSIVE; 	//server
-	if((err = getaddrinfo(NULL, port, &hints, &res)) != 0){
+	if((err = getaddrinfo(NULL, port, &hints, &res)) != 0)
+	{
 		printf("getaddrinfo: %s\n", gai_strerror(err));
 		exit(1);
 	}
 	sock = socket(res->ai_family, res->ai_socktype, 0); //ソケット作成
-	if(sock < 0){
+	if(sock < 0)
+	{
 		perror("socket");
 		exit(1);
 	}
@@ -63,14 +68,16 @@ void server(int argc, char *argv[]){
 	//ポートを再利用
 	setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (const void *)&optval, sizeof(optval));
 	//ソケットにアドレス、ポート番号を結びつける
-	if(bind(sock, res->ai_addr, res->ai_addrlen) != 0){
+	if(bind(sock, res->ai_addr, res->ai_addrlen) != 0)
+	{
 		perror("bind");
 		exit(1);
 	}
 	freeaddrinfo(res);	//メモリ解放
 
 	//クライアントからの接続要求待機（接続要求を保留できる数）
-	if(listen(sock, 5) != 0){
+	if(listen(sock, 5) != 0)
+	{
 		perror("listen");
 		exit(1);
 	}
@@ -88,7 +95,8 @@ void server(int argc, char *argv[]){
 			exit(1);
 		}
 		//入出力をFILEに変更
-		if((fp = fdopen(socke, "r+")) == NULL){
+		if((fp = fdopen(socke, "r+")) == NULL)
+		{
 			perror("fdopen");
 			exit(1);
 		}
@@ -97,7 +105,8 @@ void server(int argc, char *argv[]){
 		int g,r;
 		srand((unsigned int)time(NULL));
 		int i;
-		for(i = 0; i < 2; ++i){
+		for(i = 0; i < 2; ++i)
+		{
 			do
 			{
 				g = rand()%13;
@@ -141,7 +150,8 @@ void server(int argc, char *argv[]){
 	close(sock);
 }
 
-void client(int argc, char *argv[]){
+void client(int argc, char *argv[])
+{
 	int sock;
 	struct addrinfo hints, *res;
 	FILE *fp;
@@ -154,20 +164,22 @@ void client(int argc, char *argv[]){
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
-	if((err=getaddrinfo(NULL,port,&hints,&res)) != 0){
-
+	if((err=getaddrinfo(NULL,port,&hints,&res)) != 0)
+	{
 		printf("getaddrinfo: %s\n", gai_strerror(err));
 		exit(1);
 	}
 
 	sock = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
-	if(sock < 0){
+	if(sock < 0)
+	{
 		perror("socket");
 		exit(1);
 	}
 	
 	//接続
-	if(connect(sock, res->ai_addr, res->ai_addrlen)!=0){
+	if(connect(sock, res->ai_addr, res->ai_addrlen)!=0)
+	{
 		perror("connect");
 		exit(1);
 	}
@@ -390,7 +402,8 @@ void client(int argc, char *argv[]){
 
 
 
-int main(int argc, char *argv[]){
+int main(int argc, char *argv[])
+{
 	if (argv[1][0] == 's')
 	{
 		server(argc, argv);
