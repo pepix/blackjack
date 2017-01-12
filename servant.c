@@ -1,11 +1,12 @@
 /*
  * Blackjack
  * 	
- * 	gcc -o servant servant.c
+ * 	gcc -lm -o servant servant.c
  *
- *	<Server>  $servant s
- *	<Client>  $servant c
+ *	<Server>  $./servant s
+ *	<Client>  $./servant c
  */
+
 
 #include<stdio.h>
 #include<string.h>
@@ -15,7 +16,7 @@
 #include<netdb.h>
 #include<stdlib.h>
 #include<time.h>
-#include <math.h>
+#include<math.h>
 
 #define BUFSIZE 256
 int trump[13][4] = {};
@@ -37,63 +38,56 @@ int eq(int x, int y)
 
 void server(int argc, char *argv[])
 {
-	int sock, socke;	//ソケット
-	struct addrinfo hints, *res;	//getaddrinfo用
+	int sock, socke;
+	struct addrinfo hints, *res;
 	FILE *fp;
 	int err;
-	char port[] = "10001";		//ポート番号
-	struct sockaddr addr;		//accept用
-	socklen_t	addrlen;	//accept用
-	int optval = 1;			//setsockopt用
+	char port[] = "10001";
+	struct sockaddr addr;
+	socklen_t	addrlen;
+	int optval = 1;
 	char buf[BUFSIZE];
 	
-	//サーバ情報
+	printf("◇♤♡♧\n");	
+	
 	memset(&hints, 0, sizeof(hints));
-	hints.ai_family = AF_INET;	//IPv4
-	hints.ai_socktype = SOCK_STREAM; //TCP
-	hints.ai_flags = AI_PASSIVE; 	//server
+	hints.ai_family = AF_INET;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_flags = AI_PASSIVE;
 	if((err = getaddrinfo(NULL, port, &hints, &res)) != 0)
 	{
 		printf("getaddrinfo: %s\n", gai_strerror(err));
 		exit(1);
 	}
-	sock = socket(res->ai_family, res->ai_socktype, 0); //ソケット作成
+	sock = socket(res->ai_family, res->ai_socktype, 0);
 	if(sock < 0)
 	{
 		perror("socket");
 		exit(1);
 	}
 
-	//ポートを再利用
 	setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (const void *)&optval, sizeof(optval));
-	//ソケットにアドレス、ポート番号を結びつける
 	if(bind(sock, res->ai_addr, res->ai_addrlen) != 0)
 	{
 		perror("bind");
 		exit(1);
 	}
-	freeaddrinfo(res);	//メモリ解放
+	freeaddrinfo(res);
 
-	//クライアントからの接続要求待機（接続要求を保留できる数）
 	if(listen(sock, 5) != 0)
 	{
 		perror("listen");
 		exit(1);
 	}
 	
-	/*
- 		１クライアント毎の接続とデータ送受信
-	*/
 	addrlen = sizeof(addr);
 	while(1)
 	{
-		//クライアントからの接続要求受付
 		socke = accept(sock, &addr, &addrlen);
 		if(socke < 0){
 			perror("accept");
 			exit(1);
 		}
-		//入出力をFILEに変更
 		if((fp = fdopen(socke, "r+")) == NULL)
 		{
 			perror("fdopen");
@@ -120,12 +114,11 @@ void server(int argc, char *argv[])
 		//Hit or Stand?
 		do
 		{
-			printf("%s", fgets(buf, BUFSIZE, fp));
-
+			fgets(buf, BUFSIZE, fp);
 			//Hit
-			printf("%d", atoi(buf));
 			if(atoi(buf) == 1 )
 			{
+				//printf("Hit\n");
 				do
 				{
 					g = rand()%13;
@@ -136,10 +129,10 @@ void server(int argc, char *argv[])
 				fprintf(fp, "%d %d\n", g, r);
 				fflush(fp);
 			}
+			//Stand
 			else if(atoi(buf) == 2)
 			{
-				//stand
-				
+				//printf("Stand\n");
 			}	
 		}
 		while (atoi(buf) == 1);
@@ -148,6 +141,7 @@ void server(int argc, char *argv[])
 	}
 	close(sock);
 }
+
 
 void client(int argc, char *argv[])
 {
@@ -159,7 +153,6 @@ void client(int argc, char *argv[])
 	int err;
 	char port[] = "10001";
 
-	//IPadd変換、socket作成、connect
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
@@ -176,13 +169,12 @@ void client(int argc, char *argv[])
 		exit(1);
 	}
 	
-	//接続
 	if(connect(sock, res->ai_addr, res->ai_addrlen)!=0)
 	{
 		perror("connect");
 		exit(1);
 	}
-	freeaddrinfo(res); //メモリ解放
+	freeaddrinfo(res);
 		
 	fp=fdopen(sock,"r+");
 
@@ -196,7 +188,7 @@ void client(int argc, char *argv[])
 	{
 		if (i >= 2)
 		{
-			printf("Hit(1) or Stand(2)? : ");
+			printf("\nHit(1) or Stand(2)? : ");
 			scanf("%d", &a);
 			fprintf(fp, "%d\n", a);
 			fflush(fp);
@@ -205,14 +197,16 @@ void client(int argc, char *argv[])
 				int d;
 				srand((unsigned int)time(NULL));
 				d = 16 + rand()%5;
-				printf("You : %d\n", sum);
-				printf("Dealer : %d\n", d);
+				//printf("You \t: %d\n", sum);
+				//printf("Dealer \t: %d\n", d);
 
 				if (ace)
 				{
 					int (*fl[3])(int, int) = {gt, eq, lt};
-					char * str[3] = {"WIN","DRAW","LOSE"};
+					char * str[3] = {"YOU WIN","DRAW","YOU LOSE"};
 					int f;
+					printf("\nDealer \t: %d\n", d);
+					printf("You \t: ");
 					for (f = 0; f < sizeof(fl); ++f)
 					{
 						int i;
@@ -227,7 +221,7 @@ void client(int argc, char *argv[])
 							printf("[%d]", sum + t);
 							if(fl[f](sum + t, d))
 							{
-								puts(str[f]);
+								printf("\n%s!!\n", str[f]);	
 								goto loopend;
 							}
 						}
@@ -237,6 +231,8 @@ void client(int argc, char *argv[])
 				}
 				else
 				{
+					printf("\nYou \t: %d\n", sum);
+					printf("Dealer \t: %d\n", d);
 					if( sum == d ) printf("DRAW!!\n");
 					else if( sum > d ) printf("YOU WIN!!\n");
 					else if( sum < d ) printf("YOU LOSE!!\n");
@@ -246,21 +242,41 @@ void client(int argc, char *argv[])
 		}
 		if (fgets(buf, BUFSIZE, fp) != NULL)
 		{
-			printf("%s", buf);
-			int n,s;
-			sscanf(buf, "%d %d", &n, &s);
-			n += 1;
-			if (n >= 11)
+			int r,s;
+			char rank[] = "\0";
+			char suit[] = "\0"; 
+			//sscanf(buf, "%d %d", &n, &s);
+			sscanf(buf, "%d %d", &r, &s);
+			r = r + 1;
+			sprintf(rank, "%d", r);
+			sprintf(suit, "%d", s);
+			switch(r)
+			{
+				case 1:  sprintf(rank, "A"); break;
+				case 11: sprintf(rank, "J"); break;
+				case 12: sprintf(rank, "Q"); break;
+				case 13: sprintf(rank, "K"); break;
+			}
+			switch(s)
+			{
+				case 0:  sprintf(suit, "♠"); break;
+				case 1:  sprintf(suit, "♡"); break;
+				case 2:  sprintf(suit, "♢"); break;
+				case 3:  sprintf(suit, "♣"); break;
+				default: sprintf(suit, "not found");
+			}
+			printf("%s %s\t", suit, rank);
+			if (r >= 11)
 			{
 				sum += 10;
 			}
-			else if (n == 1)
+			else if (r == 1)
 			{
 				++ace;
 			}
 			else
 			{
-				sum += n;
+				sum += r;
 			}
 			//Ace
 			if (ace)
@@ -277,8 +293,9 @@ void client(int argc, char *argv[])
 					printf("[%d]", sum + t);
 					if ( (sum + t) == 21 )
 					{
-						printf("BLACK JACK!!!\n");
-						break;
+						printf("\nBLACK JACK!!!\n");
+						printf("YOU WIN!!\n");
+						goto loopend2;
 					}
 				}
 				printf("\n");
@@ -295,10 +312,12 @@ void client(int argc, char *argv[])
 		}
 		else if ( sum == 21 )
 		{
-			printf("BLACK JACK!!!\n");
+			printf("\nBLACK JACK!!!\n");
+			printf("YOU WIN!!\n");
 			break;
 		}
 	}
+	loopend2:;
 	//while(1){
 	//	if( phase == 0 ){
 	//	
@@ -394,7 +413,6 @@ void client(int argc, char *argv[])
 	//	}
 	//}
 	
-
 	close(sock);
 }
 
